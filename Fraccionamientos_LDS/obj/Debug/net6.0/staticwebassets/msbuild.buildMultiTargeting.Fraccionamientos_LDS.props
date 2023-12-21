@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\Fraccionamientos_LDS.props" />
+</Project>
