@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 public static class PasswordHasher
@@ -10,6 +12,12 @@ public static class PasswordHasher
             if (string.IsNullOrEmpty(password))
             {
                 throw new ArgumentException("La contraseña no puede ser nula o vacía");
+            }
+
+            // Agrega requisitos para la contraseña (mayúsculas, números, caracteres especiales)
+            if (!IsPasswordStrong(password))
+            {
+                throw new ArgumentException("La contraseña debe contener al menos una mayúscula, un número y un carácter especial.");
             }
 
             using (SHA256 sha256 = SHA256.Create())
@@ -47,5 +55,17 @@ public static class PasswordHasher
             Console.WriteLine($"Error al verificar la contraseña: {ex.Message}");
             throw;
         }
+    }
+
+    public static bool IsPasswordStrong(string password)
+    {
+        // Requiere al menos una mayúscula, un número y un carácter especial
+        return password.Any(char.IsUpper) && password.Any(char.IsDigit) && password.Any(IsSpecialCharacter);
+    }
+
+    private static bool IsSpecialCharacter(char c)
+    {
+        // Puedes personalizar esta lógica según los caracteres especiales que deseas permitir
+        return !char.IsLetterOrDigit(c);
     }
 }

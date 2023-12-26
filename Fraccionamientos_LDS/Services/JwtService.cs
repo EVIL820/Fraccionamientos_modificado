@@ -1,4 +1,5 @@
 ﻿using Fraccionamientos_LDS.Entities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -11,10 +12,12 @@ namespace Fraccionamientos_LDS.Services
     public class JwtService
     {
         private readonly JwtSettings _jwtSettings;
+        private readonly bool _encryptPasswords;
 
-        public JwtService(IOptions<JwtSettings> jwtSettings)
+        public JwtService(IOptions<JwtSettings> jwtSettings, IConfiguration configuration)
         {
             _jwtSettings = jwtSettings.Value;
+            _encryptPasswords = configuration.GetValue<bool>("AppSettings:EncryptPasswords");
         }
 
         public string GenerateJwtToken(string userId, string username)

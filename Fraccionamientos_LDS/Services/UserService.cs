@@ -1,18 +1,25 @@
+using Fraccionamientos_LDS.Entities;
 using Fraccionamientos_LDS.Repositories.Interfaces;
 using Fraccionamientos_LDS.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Annotations;
+using System;
+using System.Collections.Generic;
 
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly ILogger<UserService> _logger;
+    private readonly IConfiguration _configuration;
 
-    public UserService(IUserRepository userRepository, ILogger<UserService> logger)
+    public UserService(IUserRepository userRepository, ILogger<UserService> logger, IConfiguration configuration)
     {
         _userRepository = userRepository;
         _logger = logger;
+        _configuration = configuration;
     }
-    
+
     [SwaggerOperation(Summary = "Obtiene todos los usuarios.")]
     public IEnumerable<User> GetUsers()
     {
@@ -22,88 +29,148 @@ public class UserService : IUserService
     [SwaggerOperation(Summary = "Obtiene un usuario por su Id.")]
     public User GetUserById(int id)
     {
-            return _userRepository.GetUserById(id);
+        return _userRepository.GetUserById(id);
     }
-    
+
     [SwaggerOperation(Summary = "Crea un nuevo usuario.")]
     public void CreateUser(User user)
     {
-        if (user != null)
+        try
         {
-            // Validar que UserName, Email y Password no sean nulos ni iguales a "string"
-            if (IsValidStringValue(user.UserName) && IsValidStringValue(user.Email) && IsValidStringValue(user.Password))
+            if (user == null || !IsValidStringValue(user.UserName) || !IsValidStringValue(user.Email) || !IsValidStringValue(user.Password))
             {
-                // Hash de la nueva contraseña antes de almacenarla
-                user.Password = PasswordHasher.HashPassword(user.Password);
-                _userRepository.CreateUser(user);
-            }
-            
-            else
-            {
-                // Devolver un código de estado 400 Bad Request con un mensaje de error detallado
                 throw new ArgumentException("Los campos UserName, Email y Password no pueden ser nulos ni iguales a 'string'.");
             }
+
+            // Obtener el valor de la configuración
+            bool encryptPasswords = _configuration.GetValue<bool>("AppSettings:EncryptPasswords");
+
+            if (encryptPasswords)
+            {
+                // Verificar si la contraseña cumple con los requisitos
+                if (!PasswordHasher.IsPasswordStrong(user.Password))
+                {
+                    // Mensaje indicando los requisitos de la contraseña
+                    throw new ArgumentException("La contraseña debe contener al menos una mayúscula, un número y un carácter especial.");
+                }
+
+                // Hash de la nueva contraseña antes de almacenarla
+                user.Password = PasswordHasher.HashPassword(user.Password);
+            }
+
+            _userRepository.CreateUser(user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error al crear un nuevo usuario: {ex.Message}");
+            throw;
         }
     }
 
     [SwaggerOperation(Summary = "Actualiza un usuario.")]
     public void UpdateUser(int userId, User updatedUser)
     {
-        var existingUser = _userRepository.GetUserById(userId);
-
-        if (existingUser == null)
+        try
         {
-            _logger.LogError($"Usuario con ID {userId} no encontrado");
-            throw new ArgumentException($"Usuario con ID {userId} no encontrado");
-        }
-        
-        // Actualizar solo los campos válidos y diferentes de "string"
-        existingUser.UserName = IsValidUpdateValue(updatedUser.UserName, existingUser.UserName) ? updatedUser.UserName : existingUser.UserName;
-        existingUser.Email = IsValidUpdateValue(updatedUser.Email, existingUser.Email) ? updatedUser.Email : existingUser.Email;
-        existingUser.Password = IsValidUpdateValue(updatedUser.Password, existingUser.Password) ? PasswordHasher.HashPassword(updatedUser.Password) : existingUser.Password;
+            var existingUser = _userRepository.GetUserById(userId);
 
-        _userRepository.UpdateUser(existingUser);
+            if (existingUser == null)
+            {
+                _logger.LogError($"Usuario con ID {userId} no encontrado");
+                throw new ArgumentException($"Usuario con ID {userId} no encontrado");
+            }
 
-        _logger.LogInformation($"Usuario con ID {userId} actualizado correctamente");
+            // Actualizar solo los campos válidos
+            existingUser.UserName = IsValidUpdateValue(updatedUser.UserName, existingUser.UserName) ? updatedUser.UserName : existingUser.UserName;
+            existingUser.Email = IsValidUpdateValue(updatedUser.Email, existingUser.Email) ? updatedUser.Email : existingUser.Email;
+
+            // Verificar y actualizar la contraseña si se proporciona
+            if (!string.IsNullOrEmpty(updatedUser.Password))
+            {
+                // Verificar que la nueva contraseña sea fuerte
+                if (!PasswordHasher.IsPasswordStrong(updatedUser.Password))
+                {
+                    // Mensaje indicando los requisitos de la contraseña
+                    throw new ArgumentException("La contraseña debe contener al menos una mayúscula, un número y un carácter especial.");
+                }
+
+                // Hash de la nueva contraseña antes de almacenarla
+                existingUser.Password = PasswordHasher.HashPassword(updatedUser.Password);
+            }
+
+            _userRepository.UpdateUser(existingUser);
+
+            _logger.LogInformation($"Usuario con ID {userId} actualizado correctamente");
         }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error al actualizar un usuario: {ex.Message}");
+            throw;
+        }
+    }
 
     [SwaggerOperation(Summary = "Elimina un usuario por su Id.")]
     public void DeleteUser(int id)
     {
-        _userRepository.DeleteUser(id);
-        _logger.LogInformation($"Usuario con ID {id} eliminado correctamente");
+        try
+        {
+            _userRepository.DeleteUser(id);
+            _logger.LogInformation($"Usuario con ID {id} eliminado correctamente");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error al eliminar un usuario: {ex.Message}");
+            throw;
+        }
     }
 
     [SwaggerOperation(Summary = "Autentica un usuario.")]
     public User AuthenticateUser(string identifier, string password)
     {
-        Console.WriteLine($"Entrando en AuthenticateUser: identifier={identifier}");
-
-        // Validar que los valores no sean nulos ni iguales a "string"
-        if (!string.IsNullOrEmpty(identifier) && !string.IsNullOrEmpty(password))
+        try
         {
+            Console.WriteLine($"Entrando en AuthenticateUser: identifier={identifier}");
+
+            // Validar que los valores no sean nulos ni iguales a "string"
+            if (string.IsNullOrEmpty(identifier) || string.IsNullOrEmpty(password))
+            {
+                Console.WriteLine("Valores de entrada no válidos - Autenticación fallida");
+                return null;
+            }
+
             Console.WriteLine("Valores de entrada son válidos");
 
             // Obtener el usuario por nombre de usuario o correo electrónico
             var user = _userRepository.GetUserByUserNameOrEmail(identifier);
 
-            Console.WriteLine($"Usuario recuperado: {user?.UserName}");
-
-            // Verificar si el usuario existe y comparar contraseñas
-            if (user != null && PasswordHasher.VerifyPassword(password, user.Password))
+            if (user != null)
             {
-                Console.WriteLine("Contraseña verificada - Autenticación exitosa");
-                return user;
+                Console.WriteLine($"Usuario recuperado: {user.UserName}");
+
+                // Verificar si la contraseña es null o está vacía
+                if (!string.IsNullOrEmpty(user.Password) && PasswordHasher.VerifyPassword(password, user.Password))
+                {
+                    Console.WriteLine("Contraseña verificada - Autenticación exitosa");
+                    return user;
+                }
+                else
+                {
+                    Console.WriteLine("Contraseña no verificada - Autenticación fallida");
+                }
             }
             else
             {
-                Console.WriteLine("Contraseña no verificada - Autenticación fallida");
+                Console.WriteLine("Usuario no encontrado - Autenticación fallida");
             }
-        }
 
-        Console.WriteLine("Valores de entrada no válidos - Autenticación fallida");
-        // Devolver null si los valores no son válidos o la autenticación falla
-        return null;
+            // Devolver null si los valores no son válidos o la autenticación falla
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error durante la autenticación: {ex.Message}");
+            throw;
+        }
     }
 
     private bool IsValidStringValue(string value)

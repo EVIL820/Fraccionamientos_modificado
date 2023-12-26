@@ -29,7 +29,9 @@ namespace Fraccionamientos_LDS.Repositories
         {
             Console.WriteLine($"Entrando en GetUserByUserNameOrEmail: userNameOrEmail={userNameOrEmail}");
 
-            var user = _context.Users.FirstOrDefault(u => u.UserName == userNameOrEmail || u.Email == userNameOrEmail);
+            var user = _context.Users.FirstOrDefault(u =>
+                (u.UserName == userNameOrEmail || u.Email == userNameOrEmail) &&
+                u.Password != null); // Asegurarse de que la contraseña no sea nula (cambiada por el hash)
 
             Console.WriteLine($"Usuario recuperado: {user?.UserName}");
 
