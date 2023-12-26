@@ -1,10 +1,6 @@
-using Fraccionamientos_LDS.Entities;
-using Fraccionamientos_LDS.Repositories;
 using Fraccionamientos_LDS.Repositories.Interfaces;
-using Microsoft.Extensions.Logging;
+using Fraccionamientos_LDS.Services;
 using Swashbuckle.AspNetCore.Annotations;
-using System;
-using System.Collections.Generic; // Agregado para IEnumerable
 
 public class UserService : IUserService
 {
@@ -16,7 +12,7 @@ public class UserService : IUserService
         _userRepository = userRepository;
         _logger = logger;
     }
-
+    
     [SwaggerOperation(Summary = "Obtiene todos los usuarios.")]
     public IEnumerable<User> GetUsers()
     {
@@ -26,9 +22,9 @@ public class UserService : IUserService
     [SwaggerOperation(Summary = "Obtiene un usuario por su Id.")]
     public User GetUserById(int id)
     {
-        return _userRepository.GetUserById(id);
+            return _userRepository.GetUserById(id);
     }
-
+    
     [SwaggerOperation(Summary = "Crea un nuevo usuario.")]
     public void CreateUser(User user)
     {
@@ -41,6 +37,7 @@ public class UserService : IUserService
                 user.Password = PasswordHasher.HashPassword(user.Password);
                 _userRepository.CreateUser(user);
             }
+            
             else
             {
                 // Devolver un código de estado 400 Bad Request con un mensaje de error detallado
@@ -59,7 +56,7 @@ public class UserService : IUserService
             _logger.LogError($"Usuario con ID {userId} no encontrado");
             throw new ArgumentException($"Usuario con ID {userId} no encontrado");
         }
-
+        
         // Actualizar solo los campos válidos y diferentes de "string"
         existingUser.UserName = IsValidUpdateValue(updatedUser.UserName, existingUser.UserName) ? updatedUser.UserName : existingUser.UserName;
         existingUser.Email = IsValidUpdateValue(updatedUser.Email, existingUser.Email) ? updatedUser.Email : existingUser.Email;
@@ -68,7 +65,7 @@ public class UserService : IUserService
         _userRepository.UpdateUser(existingUser);
 
         _logger.LogInformation($"Usuario con ID {userId} actualizado correctamente");
-    }
+        }
 
     [SwaggerOperation(Summary = "Elimina un usuario por su Id.")]
     public void DeleteUser(int id)

@@ -1,4 +1,6 @@
-﻿namespace Fraccionamientos_LDS.Repositories.Interfaces
+﻿using Fraccionamientos_LDS.Entities;
+
+namespace Fraccionamientos_LDS.Repositories.Interfaces
 {
     public interface IUserRepository
     {
