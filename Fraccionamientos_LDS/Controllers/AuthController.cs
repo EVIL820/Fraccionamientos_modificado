@@ -41,7 +41,8 @@ public class AuthController : ControllerBase
 
             Console.WriteLine($"Autenticación exitosa para usuario: {user.UserName}");
 
-            var token = _jwtService.GenerateJwtToken(user.UserId.ToString(), user.UserName);
+            // Corrige la llamada a GenerateJwtToken
+            var token = _jwtService.GenerateJwtToken(user);
 
             return Ok(new { Token = token });
         }

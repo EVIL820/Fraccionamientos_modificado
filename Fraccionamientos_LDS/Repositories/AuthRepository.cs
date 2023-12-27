@@ -1,7 +1,7 @@
 ﻿using Fraccionamientos_LDS.Data;
-using Fraccionamientos_LDS.Entities;
 using Fraccionamientos_LDS.Repositories.Interfaces;
-using System;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace Fraccionamientos_LDS.Repositories
 {
@@ -28,6 +28,27 @@ namespace Fraccionamientos_LDS.Repositories
             }
 
             return null;
+        }
+
+        public async Task<User> AuthenticateUserAsync(string identifier, string password)
+        {
+            // Implementa la lógica de autenticación asincrónica aquí
+            // Puedes utilizar el UserRepository o cualquier otra lógica que necesites
+
+            // Ejemplo:
+            var user = await _context.Users.FirstOrDefaultAsync(u => (u.UserName == identifier || u.Email == identifier) && u.Password != null);
+
+            if (user != null && PasswordHasher.VerifyPassword(password, user.Password))
+            {
+                return user;
+            }
+
+            return null;
+        }
+
+        public ResidentialContext GetContext()
+        {
+            return _context;
         }
     }
 }

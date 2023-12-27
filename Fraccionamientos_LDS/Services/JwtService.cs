@@ -20,13 +20,13 @@ namespace Fraccionamientos_LDS.Services
             _encryptPasswords = configuration.GetValue<bool>("AppSettings:EncryptPasswords");
         }
 
-        public string GenerateJwtToken(string userId, string username)
+        public string GenerateJwtToken(User user)
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Name, username),
-            };
+            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+            new Claim(ClaimTypes.Name, user.UserName),
+        };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

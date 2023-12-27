@@ -10,7 +10,6 @@ namespace Fraccionamientos_LDS.Services
         void CreateUser(User user);
         void UpdateUser(int userId, User updatedUser);
         void DeleteUser(int id);
-        User AuthenticateUser(string userNameOrEmail, string password);
     }
 }
    
