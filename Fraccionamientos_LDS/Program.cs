@@ -18,11 +18,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Nombre de tu API", Version = "v1" });
-
-    // Comenta o elimina la siguiente línea en la configuración Swagger
-    // c.MapType<User>(() => new Microsoft.OpenApi.Models.OpenApiSchema { Type = "object" });
-
-    // ... (otras configuraciones)
 });
 
 // Setting Connection string
@@ -35,6 +30,7 @@ builder.Services.AddDbContext<ResidentialContext>(options =>
 
 // Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuthRepository, AuthRepository>(); // Agregar esta línea
 
 // Services
 builder.Services.AddScoped<IUserService, UserService>();

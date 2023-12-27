@@ -1,18 +1,21 @@
 ﻿using Fraccionamientos_LDS.Entities;
+using Fraccionamientos_LDS.Repositories.Interfaces;
 using Fraccionamientos_LDS.Services;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
+using System;
 
 [ApiController]
 [Route("auth")]
 public class AuthController : ControllerBase
 {
-    private readonly IUserService _userService;
+    private readonly IAuthRepository _authRepository;
     private readonly JwtService _jwtService;
 
-    public AuthController(IUserService userService, JwtService jwtService)
+    public AuthController(IAuthRepository authRepository, JwtService jwtService)
     {
-        _userService = userService;
-        _jwtService = jwtService;
+        _authRepository = authRepository ?? throw new ArgumentNullException(nameof(authRepository));
+        _jwtService = jwtService ?? throw new ArgumentNullException(nameof(jwtService));
     }
 
     [HttpPost("login")]
@@ -28,27 +31,22 @@ public class AuthController : ControllerBase
                 return BadRequest("Debe proporcionar un identificador y una contraseña");
             }
 
-            // Verificar credenciales utilizando el servicio de usuario
-            var user = _userService.AuthenticateUser(loginRequest.Identifier, loginRequest.Password);
+            var user = _authRepository.AuthenticateUser(loginRequest.Identifier, loginRequest.Password);
 
             if (user == null)
             {
                 Console.WriteLine("Credenciales inválidas");
-                // Credenciales inválidas
                 return Unauthorized(new { message = "Credenciales inválidas" });
             }
 
             Console.WriteLine($"Autenticación exitosa para usuario: {user.UserName}");
 
-            // Generar token JWT (aquí puedes incluir la lógica para generar el token según tus necesidades)
             var token = _jwtService.GenerateJwtToken(user.UserId.ToString(), user.UserName);
 
-            // Retornar el token en la respuesta
             return Ok(new { Token = token });
         }
         catch (Exception ex)
         {
-            // Manejar cualquier excepción durante el proceso de autenticación
             Console.WriteLine($"Error en la autenticación: {ex.Message}");
             return StatusCode(500, new { message = $"Error en la autenticación: {ex.Message}" });
         }

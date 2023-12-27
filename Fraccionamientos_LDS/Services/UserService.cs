@@ -10,12 +10,14 @@ using System.Collections.Generic;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IAuthRepository _authRepository;
     private readonly ILogger<UserService> _logger;
     private readonly IConfiguration _configuration;
 
-    public UserService(IUserRepository userRepository, ILogger<UserService> logger, IConfiguration configuration)
+    public UserService(IUserRepository userRepository, IAuthRepository authRepository, ILogger<UserService> logger, IConfiguration configuration)
     {
         _userRepository = userRepository;
+        _authRepository = authRepository;
         _logger = logger;
         _configuration = configuration;
     }
@@ -140,30 +142,20 @@ public class UserService : IUserService
 
             Console.WriteLine("Valores de entrada son válidos");
 
-            // Obtener el usuario por nombre de usuario o correo electrónico
-            var user = _userRepository.GetUserByUserNameOrEmail(identifier);
+            // Obtener el usuario por nombre de usuario o correo electrónico utilizando IAuthRepository
+            var user = _authRepository.AuthenticateUser(identifier, password);
 
             if (user != null)
             {
                 Console.WriteLine($"Usuario recuperado: {user.UserName}");
-
-                // Verificar si la contraseña es null o está vacía
-                if (!string.IsNullOrEmpty(user.Password) && PasswordHasher.VerifyPassword(password, user.Password))
-                {
-                    Console.WriteLine("Contraseña verificada - Autenticación exitosa");
-                    return user;
-                }
-                else
-                {
-                    Console.WriteLine("Contraseña no verificada - Autenticación fallida");
-                }
+                Console.WriteLine("Contraseña verificada - Autenticación exitosa");
+                return user;
             }
             else
             {
-                Console.WriteLine("Usuario no encontrado - Autenticación fallida");
+                Console.WriteLine("Usuario no encontrado o contraseña no verificada - Autenticación fallida");
             }
 
-            // Devolver null si los valores no son válidos o la autenticación falla
             return null;
         }
         catch (Exception ex)
