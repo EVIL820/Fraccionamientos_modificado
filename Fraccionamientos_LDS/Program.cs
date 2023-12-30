@@ -3,6 +3,7 @@ using Fraccionamientos_LDS.Entities;
 using Fraccionamientos_LDS.Repositories;
 using Fraccionamientos_LDS.Repositories.Interfaces;
 using Fraccionamientos_LDS.Services;
+using Fraccionamientos_LDS.Services.Interfaces; // Agregado
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,11 +31,11 @@ builder.Services.AddDbContext<ResidentialContext>(options =>
 
 // Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IAuthRepository, AuthRepository>(); // Agregar esta línea
+builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 
 // Services
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<IJwtService, JwtService>(); // Cambiado a IJwtService
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
@@ -49,9 +50,9 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
         ValidateIssuer = true,
-        ValidIssuer = "Fraccionamientos_LDS_Issuer", // Cambia por el nombre que prefieras
+        ValidIssuer = jwtSettings.Issuer, // Utiliza la configuración
         ValidateAudience = true,
-        ValidAudience = "Fraccionamientos_LDS_Audience", // Cambia por el nombre que prefieras
+        ValidAudience = jwtSettings.Audience, // Utiliza la configuración
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
     };

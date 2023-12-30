@@ -8,7 +8,7 @@ namespace Fraccionamientos_LDS.Services
     public class AuthService : IAuthService
     {
         private readonly IAuthRepository _authRepository;
-        private readonly IJwtService _jwtService;  // Asumo que tienes una interfaz para tu servicio Jwt, llamémosla IJwtService.
+        private readonly IJwtService _jwtService;
 
         public AuthService(IAuthRepository authRepository, IJwtService jwtService)
         {

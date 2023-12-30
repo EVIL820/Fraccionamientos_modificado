@@ -47,7 +47,8 @@ public static class PasswordHasher
                 byte[] inputPasswordBytes = Encoding.UTF8.GetBytes(inputPassword);
                 byte[] hashBytes = sha256.ComputeHash(inputPasswordBytes);
 
-                return hashBytes.SequenceEqual(storedHashBytes);
+                // Utilizar CompareByteArrays para una comparación segura en términos de tiempo
+                return CompareByteArrays(hashBytes, storedHashBytes);
             }
         }
         catch (Exception ex)
@@ -55,6 +56,18 @@ public static class PasswordHasher
             Console.WriteLine($"Error al verificar la contraseña: {ex.Message}");
             throw;
         }
+    }
+
+    private static bool CompareByteArrays(byte[] a, byte[] b)
+    {
+        if (a.Length != b.Length)
+            return false;
+
+        int result = 0;
+        for (int i = 0; i < a.Length; i++)
+            result |= a[i] ^ b[i];
+
+        return result == 0;
     }
 
     public static bool IsPasswordStrong(string password)
