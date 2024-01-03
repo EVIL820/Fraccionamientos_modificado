@@ -26,22 +26,29 @@ public class AuthController : ControllerBase
     {
         try
         {
-            if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Identifier) || string.IsNullOrEmpty(loginRequest.Password))
+            if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Identifier))
             {
-                return BadRequest("Debe proporcionar un identificador y una contraseña válidos.");
+                return BadRequest("Debe proporcionar un identificador válido.");
+            }
+
+            // Validación del identifier (UserName o Email)
+            var user = await _authRepository.GetUserByIdentifierAsync(loginRequest.Identifier);
+
+            if (user == null)
+            {
+                return Unauthorized(new { message = "Credenciales inválidas." });
+            }
+
+            // Si el identifier es válido, ahora solicitamos la contraseña
+            if (string.IsNullOrEmpty(loginRequest.Password))
+            {
+                return BadRequest("Debe proporcionar una contraseña válida.");
             }
 
             // Validación mejorada de las credenciales antes de intentar la autenticación.
             var isValidCredentials = await _authRepository.ValidateCredentialsAsync(loginRequest.Identifier, loginRequest.Password);
 
             if (!isValidCredentials)
-            {
-                return Unauthorized(new { message = "Credenciales inválidas." });
-            }
-
-            var user = await _authRepository.AuthenticateUserAsync(loginRequest.Identifier, loginRequest.Password);
-
-            if (user == null)
             {
                 return Unauthorized(new { message = "Credenciales inválidas." });
             }

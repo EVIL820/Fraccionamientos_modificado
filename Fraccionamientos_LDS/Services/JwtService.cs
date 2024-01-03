@@ -13,27 +13,17 @@ namespace Fraccionamientos_LDS.Services
     public class JwtService : IJwtService
     {
         private readonly JwtSettings _jwtSettings;
-        private readonly bool _encryptPasswords;
 
         public JwtService(IOptions<JwtSettings> jwtSettings, IConfiguration configuration)
         {
-            if (jwtSettings?.Value == null)
-            {
-                throw new InvalidOperationException("JwtSettings is null or not properly configured.");
-            }
-
-            _jwtSettings = jwtSettings.Value;
-            _encryptPasswords = configuration.GetValue<bool>("AppSettings:EncryptPasswords");
+            _jwtSettings = jwtSettings?.Value ?? throw new InvalidOperationException("JwtSettings is null or not properly configured.");
         }
 
         public string GenerateJwtToken(User user)
         {
             try
             {
-                if (user == null)
-                {
-                    throw new ArgumentNullException(nameof(user), "El objeto User no puede ser nulo.");
-                }
+                _ = user ?? throw new ArgumentNullException(nameof(user), "El objeto User no puede ser nulo.");
 
                 if (string.IsNullOrEmpty(user.UserName))
                 {
@@ -59,18 +49,13 @@ namespace Fraccionamientos_LDS.Services
 
                 var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-                if (tokenString == null)
-                {
-                    throw new InvalidOperationException("No se pudo generar el token JWT correctamente.");
-                }
-
-                return tokenString;
+                return tokenString ?? throw new InvalidOperationException("No se pudo generar el token JWT correctamente.");
             }
             catch (Exception ex)
             {
-                // Loguear la excepción para diagnóstico
+                // Loguear y propagar la excepción
                 Console.WriteLine($"Error en la generación del token JWT: {ex.Message}");
-                throw; // Propagar la excepción para que sea manejada por el código superior
+                throw;
             }
         }
 
@@ -99,7 +84,7 @@ namespace Fraccionamientos_LDS.Services
             }
             catch (Exception ex)
             {
-                // Log the exception for debugging purposes
+                // Loguear la excepción
                 Console.WriteLine($"Error al validar el token JWT: {ex.Message}");
                 throw;
             }
