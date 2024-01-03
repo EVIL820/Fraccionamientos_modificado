@@ -2,6 +2,6 @@
 {
     public interface IAuthService
     {
-        Task<string> AuthenticateAndGetTokenAsync(string identifier, string password);
+        Task<string> AuthenticateAndGetTokenAsync(string identifier, string password, bool isTwoFactorEnabled);
     }
 }

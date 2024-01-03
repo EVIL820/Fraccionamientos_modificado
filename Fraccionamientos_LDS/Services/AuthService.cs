@@ -16,10 +16,10 @@ namespace Fraccionamientos_LDS.Services
             _jwtService = jwtService;
         }
 
-        public async Task<string> AuthenticateAndGetTokenAsync(string identifier, string password)
+        public async Task<string> AuthenticateAndGetTokenAsync(string identifier, string password, bool isTwoFactorEnabled)
         {
             // Lógica de autenticación y generación de token aquí
-            var user = await _authRepository.AuthenticateUserAsync(identifier, password);
+            var user = await _authRepository.AuthenticateUserAsync(identifier, password, isTwoFactorEnabled);
 
             // Aquí utilizamos el servicio JwtService para generar el token.
             var token = _jwtService.GenerateJwtToken(user);
