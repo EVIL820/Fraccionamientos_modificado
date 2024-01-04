@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Fraccionamientos_LDS")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9aad319a1e3ba830e882eef41a2cfa8ba9a10203")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
 [assembly: System.Reflection.AssemblyProductAttribute("Fraccionamientos_LDS")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Fraccionamientos_LDS")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
