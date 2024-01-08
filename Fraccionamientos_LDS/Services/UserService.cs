@@ -1,3 +1,4 @@
+using Fraccionamientos_LDS;
 using Fraccionamientos_LDS.Entities;
 using Fraccionamientos_LDS.Repositories.Interfaces;
 using Fraccionamientos_LDS.Services;
@@ -122,45 +123,6 @@ public class UserService : IUserService
         catch (Exception ex)
         {
             _logger.LogError($"Error al eliminar un usuario: {ex.Message}");
-            throw;
-        }
-    }
-
-    [SwaggerOperation(Summary = "Autentica un usuario.")]
-    public User AuthenticateUser(string identifier, string password)
-    {
-        try
-        {
-            Console.WriteLine($"Entrando en AuthenticateUser: identifier={identifier}");
-
-            // Validar que los valores no sean nulos ni iguales a "string"
-            if (string.IsNullOrEmpty(identifier) || string.IsNullOrEmpty(password))
-            {
-                Console.WriteLine("Valores de entrada no válidos - Autenticación fallida");
-                return null;
-            }
-
-            Console.WriteLine("Valores de entrada son válidos");
-
-            // Obtener el usuario por nombre de usuario o correo electrónico utilizando IAuthRepository
-            var user = _authRepository.AuthenticateUser(identifier, password);
-
-            if (user != null)
-            {
-                Console.WriteLine($"Usuario recuperado: {user.UserName}");
-                Console.WriteLine("Contraseña verificada - Autenticación exitosa");
-                return user;
-            }
-            else
-            {
-                Console.WriteLine("Usuario no encontrado o contraseña no verificada - Autenticación fallida");
-            }
-
-            return null;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Error durante la autenticación: {ex.Message}");
             throw;
         }
     }

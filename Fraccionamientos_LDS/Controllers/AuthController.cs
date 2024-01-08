@@ -1,6 +1,7 @@
 ﻿using Fraccionamientos_LDS.Entities;
 using Fraccionamientos_LDS.Repositories.Interfaces;
-using Fraccionamientos_LDS.Services;
+using Fraccionamientos_LDS.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System;
@@ -10,44 +11,56 @@ using System;
 public class AuthController : ControllerBase
 {
     private readonly IAuthRepository _authRepository;
-    private readonly JwtService _jwtService;
+    private readonly IJwtService _jwtService;
 
-    public AuthController(IAuthRepository authRepository, JwtService jwtService)
+    public AuthController(IAuthRepository authRepository, IJwtService jwtService)
     {
         _authRepository = authRepository ?? throw new ArgumentNullException(nameof(authRepository));
         _jwtService = jwtService ?? throw new ArgumentNullException(nameof(jwtService));
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginRequest loginRequest)
+    [SwaggerOperation(Summary = "Inicia sesión y obtiene un token JWT.")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
     {
-        Console.WriteLine($"Entrando en AuthController/Login: identifier={loginRequest.Identifier}");
-
         try
         {
-            if (string.IsNullOrEmpty(loginRequest?.Identifier) || string.IsNullOrEmpty(loginRequest.Password))
+            if (loginRequest == null || string.IsNullOrEmpty(loginRequest.Identifier))
             {
-                Console.WriteLine("Datos de autenticación no válidos");
-                return BadRequest("Debe proporcionar un identificador y una contraseña");
+                return BadRequest("Debe proporcionar un identificador válido.");
             }
 
-            var user = _authRepository.AuthenticateUser(loginRequest.Identifier, loginRequest.Password);
+            // Validación del identifier (UserName o Email)
+            var user = await _authRepository.GetUserByIdentifierAsync(loginRequest.Identifier);
 
             if (user == null)
             {
-                Console.WriteLine("Credenciales inválidas");
-                return Unauthorized(new { message = "Credenciales inválidas" });
+                return Unauthorized(new { message = "Credenciales inválidas." });
             }
 
-            Console.WriteLine($"Autenticación exitosa para usuario: {user.UserName}");
+            // Si el identifier es válido, ahora solicitamos la contraseña
+            if (string.IsNullOrEmpty(loginRequest.Password))
+            {
+                return BadRequest("Debe proporcionar una contraseña válida.");
+            }
 
-            var token = _jwtService.GenerateJwtToken(user.UserId.ToString(), user.UserName);
+            // Validación mejorada de las credenciales antes de intentar la autenticación.
+            var isValidCredentials = await _authRepository.ValidateCredentialsAsync(loginRequest.Identifier, loginRequest.Password);
+
+            if (!isValidCredentials)
+            {
+                return Unauthorized(new { message = "Credenciales inválidas." });
+            }
+
+            // Autenticación exitosa
+            var token = _jwtService.GenerateJwtToken(user);
 
             return Ok(new { Token = token });
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error en la autenticación: {ex.Message}");
+            // Manejo adecuado de errores y respuesta al cliente.
             return StatusCode(500, new { message = $"Error en la autenticación: {ex.Message}" });
         }
     }

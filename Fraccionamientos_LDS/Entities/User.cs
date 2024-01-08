@@ -15,4 +15,5 @@ public class User
 
     [Required]
     public string Password { get; set; }
+    public bool TwoFactorEnabled { get; set; }
 }
