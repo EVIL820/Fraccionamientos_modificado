@@ -129,5 +129,39 @@ namespace Fraccionamientos_LDS.Repositories
 
             return result == 0;
         }
+
+        public async Task<bool> ActivateTwoFactorAsync(string userId)
+        {
+            if (int.TryParse(userId, out int parsedUserId))
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == parsedUserId);
+
+                if (user != null)
+                {
+                    user.TwoFactorEnabled = true;
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public async Task<bool> DeactivateTwoFactorAsync(string userId)
+        {
+            if (int.TryParse(userId, out int parsedUserId))
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == parsedUserId);
+
+                if (user != null)
+                {
+                    user.TwoFactorEnabled = false;
+                    await _context.SaveChangesAsync();
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

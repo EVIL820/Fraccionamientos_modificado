@@ -26,5 +26,15 @@ namespace Fraccionamientos_LDS.Services
 
             return token;
         }
+
+        public async Task<bool> ActivateTwoFactorAsync(string userId)
+        {
+            return await _authRepository.ActivateTwoFactorAsync(userId);
+        }
+
+        public async Task<bool> DeactivateTwoFactorAsync(string userId)
+        {
+            return await _authRepository.DeactivateTwoFactorAsync(userId);
+        }
     }
 }

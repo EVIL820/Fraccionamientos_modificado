@@ -7,5 +7,8 @@ namespace Fraccionamientos_LDS.Repositories.Interfaces
         Task<bool> ValidateCredentialsAsync(string identifier, string password);
         Task<User> GetUserByIdentifierAsync(string identifier);
         Task<User> AuthenticateUserAsync(string identifier, string plainTextPassword, bool isTwoFactorEnabled);
+        Task<bool> ActivateTwoFactorAsync(string userId);
+        Task<bool> DeactivateTwoFactorAsync(string userId);
+   
     }
 }
